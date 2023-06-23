@@ -1,22 +1,22 @@
 # nettools
-Network tools implemented on C
+Network tools implemented on C.
 
 ## Build
-<code>
+```bash
 mkdir .build
 cd .build
 cmake ..
 cmake --build .
-</code>
+```
 
 ### -or- (after CMake) For Linux with make:
-<code>
+```bash
 make
-</code>
+```
 
 ### -or- (after CMake) For Windows:
-<code>
+```batch
 MSBuild.exe nettools.sln
-</code>
+```
 
 Executable examples can be found in "examples" and the corresponding nested directories.
