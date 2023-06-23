@@ -23,13 +23,17 @@ int main(int argc, char *argv[])
 		int res = get_ip_by_domain_name(STUN_DOMAIN, &ip, 1);
 		chperror(res, -1, false, "get_ip_by_domain_name()");
 
-		uint8_t stun_ip[16];
+		char stun_ip[16];
 		memset(stun_ip, 0, sizeof(stun_ip));
 
+#ifdef _WIN32
+		sprintf_s(stun_ip, sizeof(stun_ip), "%" PRIu8 ".%" PRIu8 ".%" PRIu8 ".%" PRIu8, ip.ipv4.A, ip.ipv4.B, ip.ipv4.C, ip.ipv4.D);
+#else
 		sprintf(stun_ip, "%" PRIu8 ".%" PRIu8 ".%" PRIu8 ".%" PRIu8, ip.ipv4.A, ip.ipv4.B, ip.ipv4.C, ip.ipv4.D);
+#endif
 
 		res = get_ext_ipv4_by_stun(stun_ip, STUN_PORT, &ext_ipv4, &local_port);
-		chperror(res, 0, true, "get_ext_ipv4()");
+		chperror(res, 0, true, "get_ext_ipv4_by_stun()");
 
 		printf("\tYour external IPv4 and local opened PORT is \"%" PRIu8 ".%" PRIu8
 															".%" PRIu8 ".%" PRIu8 ":%" PRIu16 "\"\n",
@@ -40,7 +44,7 @@ int main(int argc, char *argv[])
 		printf("Using STUN IPv4 address \"%s\":\n", STUN_IP);
 
 		int res = get_ext_ipv4_by_stun(STUN_IP, STUN_PORT, &ext_ipv4, &local_port);
-		chperror(res, 0, true, "get_ext_ipv4()");
+		chperror(res, 0, true, "get_ext_ipv4_by_stun()");
 
 		printf("\tYour external IPv4 and local opened PORT is \"%" PRIu8 ".%" PRIu8
 															".%" PRIu8 ".%" PRIu8 ":%" PRIu16 "\"\n",

@@ -2,20 +2,7 @@
 #define NETTOOLS_H
 
 
-#include <stdio.h>
-#include <string.h>
-#include <stdbool.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <inttypes.h>
-
-
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-
-
+#include "xsocket.h"
 #include "netstructures.h"
 
 
@@ -23,8 +10,8 @@
 
 
 void cherror(int code, int indicator, bool type, char *str);
-int get_ext_ipv4(char *stun_ipv4, uint16_t stun_port, struct ipv4_t *ext_ipv4, port_t *local_port);
-int get_ip_by_domain_name(char *domain_name, struct ip_t *ips, size_t max_ips);
+int get_ext_ipv4_by_stun(const char *stun_ipv4, uint16_t stun_port, struct ipv4_t *ext_ipv4, port_t *local_port);
+int get_ip_by_domain_name(char *domain_name, struct ip_t *ips, int max_ips);
 
 
 /*
@@ -61,7 +48,7 @@ void chperror(int code, int indicator, bool type, char *str)
 * Based on RFC5389 (https://www.ietf.org/rfc/rfc5389.txt)
 *
 */
-int get_ext_ipv4_by_stun(char *stun_ipv4, uint16_t stun_port, struct ipv4_t *ext_ipv4, port_t *local_port)
+int get_ext_ipv4_by_stun(const char *stun_ipv4, uint16_t stun_port, struct ipv4_t *ext_ipv4, port_t *local_port)
 {
 
 #define STUN_HEADER_SIZE 20
@@ -72,20 +59,30 @@ int get_ext_ipv4_by_stun(char *stun_ipv4, uint16_t stun_port, struct ipv4_t *ext
 
 	memset(&stun_addr, 0, addr_len);
 	stun_addr.sin_family = AF_INET;
-	stun_addr.sin_addr.s_addr = inet_addr(stun_ipv4);
+	inet_pton(AF_INET, stun_ipv4, &stun_addr.sin_addr);
 	stun_addr.sin_port = htons(stun_port);
 
-	int sockfd = socket(stun_addr.sin_family, SOCK_DGRAM, IPPROTO_UDP);
-	if ( sockfd == -1 ) return -1;
+	if ( __xsocket_init() != NO_ERROR ) return -1;
 
-	int res = connect(sockfd, (struct sockaddr *)&stun_addr, addr_len);
-	if ( res != 0 ) return -1;
+	xsocket_t sockfd = xsocket(stun_addr.sin_family, SOCK_DGRAM, IPPROTO_UDP);
+	if ( sockfd == -1 ) 
+	{
+		__xsocket_cleanup();
+		return -1;
+	}
+
+	int res = xsocket_connect(sockfd, (struct sockaddr *)&stun_addr, addr_len);
+	if ( res != 0 ) 
+	{
+		__xsocket_cleanup();
+		return -1;
+	}
 
 #ifdef __NETTOOLS_PRINT
 	printf("Connection with \"%s:%d\" established\n", stun_ipv4, stun_port);
 #endif
 
-	uint8_t request_buf[STUN_HEADER_SIZE];
+	char request_buf[STUN_HEADER_SIZE];
 	memset(request_buf,'\0', STUN_HEADER_SIZE);
 
 	// building STUN-request
@@ -97,14 +94,20 @@ int get_ext_ipv4_by_stun(char *stun_ipv4, uint16_t stun_port, struct ipv4_t *ext
 	*(uint32_t *)(request_buf + 16) = htonl(0x01234567); // Transaction ID cont.
 
 	res = sendto(sockfd, request_buf, STUN_HEADER_SIZE, 0, (struct sockaddr *)&stun_addr, addr_len);
-	if ( res == -1 ) return -1;
+	if ( res == -1 ) 
+	{
+		xsocket_close(sockfd);
+		__xsocket_cleanup();
+		return -1;
+	}
 
-	uint8_t response_buf[STUN_RESPONSE_MAX_SIZE];
+	char response_buf[STUN_RESPONSE_MAX_SIZE];
 	memset(response_buf,'\0', STUN_RESPONSE_MAX_SIZE);
 	res = recvfrom(sockfd, response_buf, STUN_RESPONSE_MAX_SIZE, 0, NULL, 0);
 	if ( res == -1 ) return -1;
 
-	res = close(sockfd);
+	res = xsocket_close(sockfd);
+	__xsocket_cleanup();
 	if ( res == -1 ) return -1;
 
 #ifdef __NETTOOLS_PRINT
@@ -173,7 +176,7 @@ int get_ext_ipv4_by_stun(char *stun_ipv4, uint16_t stun_port, struct ipv4_t *ext
 * return: number of IP addresses (or -1 -> error) and errno
 *
 */
-int get_ip_by_domain_name(char *domain_name, struct ip_t *ips, size_t max_ips)
+int get_ip_by_domain_name(char *domain_name, struct ip_t *ips, int max_ips)
 {
 	struct addrinfo hint, *result;
 	memset(&hint, 0, sizeof(hint));
@@ -181,15 +184,20 @@ int get_ip_by_domain_name(char *domain_name, struct ip_t *ips, size_t max_ips)
 	hint.ai_family = AF_UNSPEC;
 	hint.ai_socktype = SOCK_STREAM;
 
+	if ( __xsocket_init() != NO_ERROR ) return -1;
 	int res = getaddrinfo(domain_name, NULL, &hint, &result);
-	chperror(res, 0, true, "getaddrinfo()");
+	if ( res != 0 ) 
+	{
+		__xsocket_cleanup();
+		return -1;
+	}
 
 	struct addrinfo *addrinfo_i = result;
 	void *tmp_addr = NULL;
 
-	size_t ips_counter = 0;
+	int ips_counter = 0;
 
-	while ( addrinfo_i != NULL )
+	while ( addrinfo_i != NULL && ips_counter < max_ips )
 	{
 		if (addrinfo_i->ai_family == AF_INET)
 		{
@@ -201,6 +209,8 @@ int get_ip_by_domain_name(char *domain_name, struct ip_t *ips, size_t max_ips)
 			ips[ips_counter].ipv4.B = *((uint32_t *)tmp_addr) >> 8;
 			ips[ips_counter].ipv4.C = *((uint32_t *)tmp_addr) >> 16;
 			ips[ips_counter].ipv4.D = *((uint32_t *)tmp_addr) >> 24;
+
+			++ips_counter;
 		}
 		else if (addrinfo_i->ai_family == AF_INET6)
 		{
@@ -216,17 +226,15 @@ int get_ip_by_domain_name(char *domain_name, struct ip_t *ips, size_t max_ips)
 			ips[ips_counter].ipv6.F = htons(((uint16_t *)tmp_addr)[5]);
 			ips[ips_counter].ipv6.G = htons(((uint16_t *)tmp_addr)[6]);
 			ips[ips_counter].ipv6.H = htons(((uint16_t *)tmp_addr)[7]);
+
+			++ips_counter;
 		}
-
-		++ips_counter;
-
-		if ( ips_counter >= max_ips )
-			break;
 
 		addrinfo_i = addrinfo_i->ai_next;
 	}
 
 	freeaddrinfo(result);
+	__xsocket_cleanup();
 
 	return ips_counter;
 }
