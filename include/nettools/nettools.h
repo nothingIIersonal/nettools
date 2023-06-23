@@ -62,7 +62,7 @@ int get_ext_ipv4_by_stun(const char *stun_ipv4, uint16_t stun_port, struct ipv4_
 	inet_pton(AF_INET, stun_ipv4, &stun_addr.sin_addr);
 	stun_addr.sin_port = htons(stun_port);
 
-	if ( __xsocket_init() != NO_ERROR ) return -1;
+	if ( __xsocket_init() ) return -1;
 
 	xsocket_t sockfd = xsocket(stun_addr.sin_family, SOCK_DGRAM, IPPROTO_UDP);
 	if ( sockfd == -1 ) 
@@ -184,7 +184,7 @@ int get_ip_by_domain_name(char *domain_name, struct ip_t *ips, int max_ips)
 	hint.ai_family = AF_UNSPEC;
 	hint.ai_socktype = SOCK_STREAM;
 
-	if ( __xsocket_init() != NO_ERROR ) return -1;
+	if ( __xsocket_init() ) return -1;
 	int res = getaddrinfo(domain_name, NULL, &hint, &result);
 	if ( res != 0 ) 
 	{
