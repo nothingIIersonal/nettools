@@ -37,16 +37,16 @@ typedef int xsocket_t;
 #endif
 
 
-int __xsocket_init();
-int __xsocket_cleanup();
-xsocket_t xsocket(int domain, int type, int protocol);
-int xsocket_close(xsocket_t sockfd);
+static int __xsocket_init();
+static int __xsocket_cleanup();
+static xsocket_t xsocket(int domain, int type, int protocol);
+static int xsocket_close(xsocket_t sockfd);
 
 
 /*
 * WIN32 specified initialization
 */
-int __xsocket_init()
+static int __xsocket_init()
 {
 #ifdef _WIN32
 	WSADATA wsa_data;
@@ -60,7 +60,7 @@ int __xsocket_init()
 /*
 * WIN32 specified cleanup
 */
-int __xsocket_cleanup()
+static int __xsocket_cleanup()
 {
 #ifdef _WIN32
 	return WSACleanup();
@@ -74,7 +74,7 @@ int __xsocket_cleanup()
 * Create and return socket
 * Arguments are standard
 */
-xsocket_t xsocket(int domain, int type, int protocol)
+static xsocket_t xsocket(int domain, int type, int protocol)
 {
 	return socket(domain, type, protocol);
 }
@@ -83,7 +83,7 @@ xsocket_t xsocket(int domain, int type, int protocol)
 /*
 * Socket connect
 */
-int xsocket_connect(xsocket_t sockfd, const struct sockaddr *addr, socklen_t addrlen)
+static int xsocket_connect(xsocket_t sockfd, const struct sockaddr *addr, socklen_t addrlen)
 {
 	int res = connect(sockfd, addr, addrlen);
 #ifdef _WIN32
@@ -96,7 +96,7 @@ int xsocket_connect(xsocket_t sockfd, const struct sockaddr *addr, socklen_t add
 /*
 * Close socket
 */
-int xsocket_close(xsocket_t sockfd)
+static int xsocket_close(xsocket_t sockfd)
 {
 	int status = 0;
 #ifdef _WIN32
