@@ -38,6 +38,8 @@ typedef int xsocket_t;
 static int __xsocket_init();
 static int __xsocket_cleanup();
 static xsocket_t xsocket(int domain, int type, int protocol);
+static int xsocket_connect(xsocket_t sockfd, const struct sockaddr *addr,
+                           socklen_t addrlen);
 static int xsocket_close(xsocket_t sockfd);
 
 /*
