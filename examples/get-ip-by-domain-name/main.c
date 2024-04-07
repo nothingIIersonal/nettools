@@ -1,6 +1,5 @@
-#include <stdio.h>
-
 #include <nettools/nettools.h>
+#include <stdio.h>
 
 #define MAX_IPS 16
 #define DOMAIN_NAME "stun2.l.google.com"

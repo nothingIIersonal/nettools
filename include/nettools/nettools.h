@@ -1,9 +1,8 @@
 #ifndef NETTOOLS_H
 #define NETTOOLS_H
 
-#include "xsocket.h"
-
 #include "netstructures.h"
+#include "xsocket.h"
 
 // #define __NETTOOLS_PRINT
 
@@ -45,7 +44,6 @@ void chperror(int code, int indicator, bool type, char *str) {
  */
 int get_ext_ipv4_by_stun(const char *stun_ipv4, uint16_t stun_port,
                          struct ipv4_t *ext_ipv4, port_t *local_port) {
-
 #define STUN_HEADER_SIZE 20
 #define STUN_RESPONSE_MAX_SIZE 256
 
@@ -57,8 +55,7 @@ int get_ext_ipv4_by_stun(const char *stun_ipv4, uint16_t stun_port,
   inet_pton(AF_INET, stun_ipv4, &stun_addr.sin_addr);
   stun_addr.sin_port = htons(stun_port);
 
-  if (__xsocket_init())
-    return -1;
+  if (__xsocket_init()) return -1;
 
   xsocket_t sockfd = xsocket(stun_addr.sin_family, SOCK_DGRAM, IPPROTO_UDP);
   if (sockfd == -1) {
@@ -80,12 +77,12 @@ int get_ext_ipv4_by_stun(const char *stun_ipv4, uint16_t stun_port,
   memset(request_buf, '\0', STUN_HEADER_SIZE);
 
   // building STUN-request
-  *(uint16_t *)request_buf = htons(0x0001);            // STUN Message Type
-  *(uint16_t *)(request_buf + 2) = htons(0x0000);      // Message Lenght
-  *(uint32_t *)(request_buf + 4) = htonl(0x2112A442);  // Magic Cookie
-  *(uint32_t *)(request_buf + 8) = htonl(0x01234567);  // Transaction ID
-  *(uint32_t *)(request_buf + 12) = htonl(0x01234567); // Transaction ID cont.
-  *(uint32_t *)(request_buf + 16) = htonl(0x01234567); // Transaction ID cont.
+  *(uint16_t *)request_buf = htons(0x0001);             // STUN Message Type
+  *(uint16_t *)(request_buf + 2) = htons(0x0000);       // Message Lenght
+  *(uint32_t *)(request_buf + 4) = htonl(0x2112A442);   // Magic Cookie
+  *(uint32_t *)(request_buf + 8) = htonl(0x01234567);   // Transaction ID
+  *(uint32_t *)(request_buf + 12) = htonl(0x01234567);  // Transaction ID cont.
+  *(uint32_t *)(request_buf + 16) = htonl(0x01234567);  // Transaction ID cont.
 
   res = sendto(sockfd, request_buf, STUN_HEADER_SIZE, 0,
                (struct sockaddr *)&stun_addr, addr_len);
@@ -98,19 +95,17 @@ int get_ext_ipv4_by_stun(const char *stun_ipv4, uint16_t stun_port,
   char response_buf[STUN_RESPONSE_MAX_SIZE];
   memset(response_buf, '\0', STUN_RESPONSE_MAX_SIZE);
   res = recvfrom(sockfd, response_buf, STUN_RESPONSE_MAX_SIZE, 0, NULL, 0);
-  if (res == -1)
-    return -1;
+  if (res == -1) return -1;
 
   res = xsocket_close(sockfd);
   __xsocket_cleanup();
-  if (res == -1)
-    return -1;
+  if (res == -1) return -1;
 
 #ifdef __NETTOOLS_PRINT
   printf("Connection closed\n");
 #endif
 
-  if (*(uint16_t *)response_buf == htons(0x0101)) // 0x0101 - success response
+  if (*(uint16_t *)response_buf == htons(0x0101))  // 0x0101 - success response
   {
     uint16_t attribute_type;
     uint16_t attribute_length;
@@ -123,8 +118,8 @@ int get_ext_ipv4_by_stun(const char *stun_ipv4, uint16_t stun_port,
       attribute_type = htons(*(uint16_t *)(response_buf + i));
       attribute_length = htons(*(uint16_t *)(response_buf + i + 2));
 
-      if (attribute_type == 0x0020) // this type of attribute indicates that it
-                                    // is an "XOR-MAPPED-ADDRESS"
+      if (attribute_type == 0x0020)  // this type of attribute indicates that it
+                                     // is an "XOR-MAPPED-ADDRESS"
       {
         // port -> "XOR'ing it with the most significant 16 bits of the magic
         // cookie,
@@ -179,8 +174,7 @@ int get_ip_by_domain_name(char *domain_name, struct ip_t *ips, int max_ips) {
   hint.ai_family = AF_UNSPEC;
   hint.ai_socktype = SOCK_STREAM;
 
-  if (__xsocket_init())
-    return -1;
+  if (__xsocket_init()) return -1;
   int res = getaddrinfo(domain_name, NULL, &hint, &result);
   if (res != 0) {
     __xsocket_cleanup();

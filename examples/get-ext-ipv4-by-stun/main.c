@@ -1,6 +1,5 @@
-#include <stdio.h>
-
 #include <nettools/nettools.h>
+#include <stdio.h>
 
 #define STUN_DOMAIN "stun2.l.google.com"
 #define STUN_IP "74.125.204.127"
@@ -10,7 +9,7 @@ int main(int argc, char *argv[]) {
   struct ipv4_t ext_ipv4 = {0};
   port_t local_port = 0;
 
-  { // using STUN domain name
+  {  // using STUN domain name
     printf("Using STUN domain name \"%s\":\n", STUN_DOMAIN);
 
     struct ip_t ip;
@@ -39,7 +38,7 @@ int main(int argc, char *argv[]) {
            ext_ipv4.A, ext_ipv4.B, ext_ipv4.C, ext_ipv4.D, local_port);
   }
 
-  { // using STUN IPv4
+  {  // using STUN IPv4
     printf("Using STUN IPv4 address \"%s\":\n", STUN_IP);
 
     int res = get_ext_ipv4_by_stun(STUN_IP, STUN_PORT, &ext_ipv4, &local_port);

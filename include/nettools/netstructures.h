@@ -1,6 +1,9 @@
 #ifndef NETSTRUCTURES_H
 #define NETSTRUCTURES_H
 
+#include <inttypes.h>
+#include <stdbool.h>
+
 struct ipv4_t {
   uint8_t A;
   uint8_t B;
@@ -20,7 +23,7 @@ struct ipv6_t {
 };
 
 struct ip_t {
-  bool type; // false -> IPv4, true -> IPv6
+  bool type;  // false -> IPv4, true -> IPv6
 
   union {
     struct ipv4_t ipv4;
