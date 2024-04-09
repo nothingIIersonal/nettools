@@ -34,12 +34,13 @@ typedef SOCKET xsocket_t;
 typedef int xsocket_t;
 #endif
 
-static int __xsocket_init();
-static int __xsocket_cleanup();
-static xsocket_t xsocket(int domain, int type, int protocol);
+static __attribute_maybe_unused__ int __xsocket_init();
+static __attribute_maybe_unused__ int __xsocket_cleanup();
+static __attribute_maybe_unused__ xsocket_t xsocket(int domain, int type,
+                                                    int protocol);
 static __attribute_maybe_unused__ int xsocket_connect(
     xsocket_t sockfd, const struct sockaddr *addr, socklen_t addrlen);
-static int xsocket_close(xsocket_t sockfd);
+static __attribute_maybe_unused__ int xsocket_close(xsocket_t sockfd);
 
 /*
  * WIN32 specified initialization
