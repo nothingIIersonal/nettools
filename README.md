@@ -9,6 +9,14 @@ cmake ..
 cmake --build .
 ```
 
+## Build examples
+```bash
+mkdir .build
+cd .build
+cmake ../examples
+cmake --build .
+```
+
 ### -or- (after CMake) For Linux with make:
 ```bash
 make

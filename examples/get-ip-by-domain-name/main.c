@@ -4,7 +4,11 @@
 #define MAX_IPS 16
 #define DOMAIN_NAME "stun2.l.google.com"
 
-int main(int argc, char *argv[]) {
+#ifdef _WIN32
+#pragma warning(disable : 5045)
+#endif
+
+int main(void) {
   struct ip_t ips[MAX_IPS];
   memset(ips, 0, sizeof(ips));
 

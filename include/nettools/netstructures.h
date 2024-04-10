@@ -22,8 +22,11 @@ struct ipv6_t {
   uint16_t H;
 };
 
+#ifdef _WIN32
+#pragma warning(disable : 4820)
+#endif
 struct ip_t {
-  bool type;  // false -> IPv4, true -> IPv6
+  bool type; // false -> IPv4, true -> IPv6
 
   union {
     struct ipv4_t ipv4;
