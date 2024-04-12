@@ -27,4 +27,3 @@ make
 MSBuild.exe nettools.sln
 ```
 
-Executable examples can be found in "examples" and the corresponding nested directories.
