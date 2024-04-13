@@ -34,6 +34,11 @@ typedef SOCKET xsocket_t;
 typedef int xsocket_t;
 #endif
 
+#ifdef _WIN32
+#include <io.h>
+#define read _read
+#endif
+
 int __xsocket_init(void);
 int __xsocket_cleanup(void);
 xsocket_t xsocket(int domain, int type, int protocol);
